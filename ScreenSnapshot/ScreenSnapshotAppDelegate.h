@@ -67,7 +67,11 @@
 	/* displays[] Quartz display ID's */
 	CGDirectDisplayID *displays;
     
-	BOOL	 DisplayRegistrationCallBackSuccessful;    
+	BOOL	 DisplayRegistrationCallBackSuccessful;
+    
+    NSTimer *timer;
+    
+    int pictureCount;
 }
 
 -(void) interrogateHardware;

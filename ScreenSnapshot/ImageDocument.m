@@ -247,16 +247,28 @@ bail:
     /* Save new image. */
     image = (CGImageRef)CFRetain(anImage);
     
-    /* Resize the image view. */
     CGSize imageSize = CGSizeMake (
-                                   CGImageGetWidth(anImage),
-                                   CGImageGetHeight(anImage)
-                                   );
-    NSSize newSize = NSSizeFromCGSize(imageSize);
-    [imageView setFrameSize:newSize];
+                                    CGImageGetWidth(anImage),
+                                    CGImageGetHeight(anImage)
+                                  );
     
-    /* Mark image view as needing display. */
-    [imageView setNeedsDisplay:YES];
+    NSImage *nextImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
+    NSData *imgData = [nextImage TIFFRepresentation];
+    NSDate *currentDate = [NSDate date];
+    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
+    NSString *filePath = [NSString stringWithFormat:@"~/Desktop/a.png"];
+
+    NSBitmapImageRep *resizedCaptureImageBitmapRep = [[NSBitmapImageRep alloc] initWithData:imgData];
+    NSData *saveData = [resizedCaptureImageBitmapRep representationUsingType:NSPNGFileType properties:nil];
+    BOOL success = [saveData writeToFile:filePath atomically:YES];
+    [nextImage release];
+    
+    /* Resize the image view. */
+//    NSSize newSize = NSSizeFromCGSize(imageSize);
+//    [imageView setFrameSize:newSize];
+//    
+//    /* Mark image view as needing display. */
+//    [imageView setNeedsDisplay:YES];
 }
 
 /* Getter for image size. */

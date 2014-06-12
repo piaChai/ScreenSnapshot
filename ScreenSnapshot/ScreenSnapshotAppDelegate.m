@@ -167,31 +167,80 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
 - (void)selectDisplayItem:(id)sender
 {
     NSMenuItem *menuItem = (NSMenuItem *)sender;
-
+    
     /* Get the index for the chosen display from the CGDirectDisplayID array. */
     NSInteger displaysIndex = [menuItem tag];
+    
+//    NSDictionary *dic = @{@"index":[NSNumber numberWithInteger:displaysIndex]};
+    
+    timer = [[NSTimer timerWithTimeInterval:1 target:self selector:@selector(captureScreenPerSecond) userInfo:nil repeats:YES]retain];
+    [timer fire];
+    [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+}
+
+- (void)captureScreenPerSecond
+{
+    for (int i=0; i<20; i++) {
+        [self captureCurrentScreen];
+    }
+}
+
+- (void)captureCurrentScreen
+{
+    pictureCount++;
+    NSLog(@"count = %d",pictureCount);
+    while (pictureCount>20) {
+        [timer invalidate];
+        pictureCount=0;
+        return;
+    }
+    
+    NSInteger displaysIndex = 0;
+    
     /* Make a snapshot image of the current display. */
     CGImageRef image = CGDisplayCreateImage(displays[displaysIndex]);
     
-    NSError *error = nil;
-    /* Create a new document. */
-    ImageDocument *newDocument = [documentController openUntitledDocumentAndDisplay:YES error:&error];
-    if (newDocument) 
+//    NSError *error = nil;
+//    /* Create a new document. */
+//    ImageDocument *newDocument = [documentController openUntitledDocumentAndDisplay:YES error:&error];
+    if (1)
     {
         /* Save the CGImageRef with the document. */
-        [newDocument setCGImage:image];
+        [self saveImageToDesk:image];
     }
     else
     {
         /* Display the error. */
-        NSAlert *alert = [NSAlert alertWithError:error];
-        [alert runModal];
+//        NSAlert *alert = [NSAlert alertWithError:error];
+//        [alert runModal];
+        return;
     }
-    
-    if (image) 
+    if (image)
     {
         CFRelease(image);
     }
+}
+
+- (void)saveImageToDesk:(CGImageRef)anImage
+{
+    /* Save new image. */
+    CGSize imageSize = CGSizeMake (
+                                   CGImageGetWidth(anImage),
+                                   CGImageGetHeight(anImage)
+                                   );
+    
+    NSImage *nextImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
+    NSData *imgData = [nextImage TIFFRepresentation];
+    NSDate *currentDate = [NSDate date];
+    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *dataPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.png",dateStr]];
+    NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithData:imgData];
+    NSData *saveData = [bitmapRep representationUsingType:NSPNGFileType properties:nil];
+    
+    BOOL success2 = [saveData writeToFile:dataPath atomically:YES];
+    [nextImage release];
 }
 
 /* Get the localized name of a display, given the display ID. */

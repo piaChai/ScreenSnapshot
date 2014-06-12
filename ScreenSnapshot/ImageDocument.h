@@ -50,11 +50,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class ImageView;
 
 @interface ImageDocument : NSDocument {
 @private
-    IBOutlet ImageView *imageView;
+//    IBOutlet ImageView *imageView;
     
     CGImageRef image;
 }

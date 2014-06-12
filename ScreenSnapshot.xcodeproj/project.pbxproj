@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		07D0E4351949ADB60076850E /* ImageDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 07D0E4341949ADB60076850E /* ImageDocument.m */; };
 		AF70327013BE5F9C006BAEFF /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF70326F13BE5F9C006BAEFF /* Cocoa.framework */; };
 		AF70327A13BE5F9C006BAEFF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AF70327813BE5F9C006BAEFF /* InfoPlist.strings */; };
 		AF70327C13BE5F9C006BAEFF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AF70327B13BE5F9C006BAEFF /* main.m */; };
@@ -15,12 +16,11 @@
 		AF70328613BE5F9C006BAEFF /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = AF70328413BE5F9C006BAEFF /* MainMenu.xib */; };
 		AF70329113BE6842006BAEFF /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF70329013BE6842006BAEFF /* ApplicationServices.framework */; };
 		AFA93DC913BF8FBF00F7F31F /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AFA93DC813BF8FBF00F7F31F /* IOKit.framework */; };
-		AFB2961613C160230074416A /* ImageDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = AFB2961513C160230074416A /* ImageDocument.m */; };
-		AFB80CC413C24AF300F10E0B /* ImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = AFB80CC313C24AF300F10E0B /* ImageView.m */; };
-		AFB80CC813C26CAF00F10E0B /* ImageDocument.xib in Resources */ = {isa = PBXBuildFile; fileRef = AFB80CC613C26CAE00F10E0B /* ImageDocument.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		07D0E4331949ADB60076850E /* ImageDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageDocument.h; sourceTree = "<group>"; };
+		07D0E4341949ADB60076850E /* ImageDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageDocument.m; sourceTree = "<group>"; };
 		AF70326B13BE5F9C006BAEFF /* ScreenSnapshot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenSnapshot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF70326F13BE5F9C006BAEFF /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		AF70327213BE5F9C006BAEFF /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -36,11 +36,6 @@
 		AF70328513BE5F9C006BAEFF /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		AF70329013BE6842006BAEFF /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		AFA93DC813BF8FBF00F7F31F /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		AFB2961413C160230074416A /* ImageDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageDocument.h; sourceTree = "<group>"; };
-		AFB2961513C160230074416A /* ImageDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageDocument.m; sourceTree = "<group>"; };
-		AFB80CC213C24AF200F10E0B /* ImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageView.h; sourceTree = "<group>"; };
-		AFB80CC313C24AF300F10E0B /* ImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageView.m; sourceTree = "<group>"; };
-		AFB80CC713C26CAE00F10E0B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ImageDocument.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,7 +97,6 @@
 				AF70328213BE5F9C006BAEFF /* ScreenSnapshotAppDelegate.m */,
 				AFB80CC513C24B2000F10E0B /* Document */,
 				AF70328413BE5F9C006BAEFF /* MainMenu.xib */,
-				AFB80CC613C26CAE00F10E0B /* ImageDocument.xib */,
 				AF70327613BE5F9C006BAEFF /* Supporting Files */,
 			);
 			path = ScreenSnapshot;
@@ -123,10 +117,8 @@
 		AFB80CC513C24B2000F10E0B /* Document */ = {
 			isa = PBXGroup;
 			children = (
-				AFB80CC213C24AF200F10E0B /* ImageView.h */,
-				AFB80CC313C24AF300F10E0B /* ImageView.m */,
-				AFB2961413C160230074416A /* ImageDocument.h */,
-				AFB2961513C160230074416A /* ImageDocument.m */,
+				07D0E4331949ADB60076850E /* ImageDocument.h */,
+				07D0E4341949ADB60076850E /* ImageDocument.m */,
 			);
 			name = Document;
 			sourceTree = "<group>";
@@ -156,6 +148,8 @@
 /* Begin PBXProject section */
 		AF70326213BE5F9C006BAEFF /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = AF70326513BE5F9C006BAEFF /* Build configuration list for PBXProject "ScreenSnapshot" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -181,7 +175,6 @@
 				AF70327A13BE5F9C006BAEFF /* InfoPlist.strings in Resources */,
 				AF70328013BE5F9C006BAEFF /* Credits.rtf in Resources */,
 				AF70328613BE5F9C006BAEFF /* MainMenu.xib in Resources */,
-				AFB80CC813C26CAF00F10E0B /* ImageDocument.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -194,8 +187,7 @@
 			files = (
 				AF70327C13BE5F9C006BAEFF /* main.m in Sources */,
 				AF70328313BE5F9C006BAEFF /* ScreenSnapshotAppDelegate.m in Sources */,
-				AFB2961613C160230074416A /* ImageDocument.m in Sources */,
-				AFB80CC413C24AF300F10E0B /* ImageView.m in Sources */,
+				07D0E4351949ADB60076850E /* ImageDocument.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,14 +216,6 @@
 				AF70328513BE5F9C006BAEFF /* en */,
 			);
 			name = MainMenu.xib;
-			sourceTree = "<group>";
-		};
-		AFB80CC613C26CAE00F10E0B /* ImageDocument.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				AFB80CC713C26CAE00F10E0B /* en */,
-			);
-			name = ImageDocument.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
