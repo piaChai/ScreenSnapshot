@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		07D0E4351949ADB60076850E /* ImageDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 07D0E4341949ADB60076850E /* ImageDocument.m */; };
 		AF70327013BE5F9C006BAEFF /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF70326F13BE5F9C006BAEFF /* Cocoa.framework */; };
 		AF70327A13BE5F9C006BAEFF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AF70327813BE5F9C006BAEFF /* InfoPlist.strings */; };
 		AF70327C13BE5F9C006BAEFF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AF70327B13BE5F9C006BAEFF /* main.m */; };
@@ -19,8 +18,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		07D0E4331949ADB60076850E /* ImageDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageDocument.h; sourceTree = "<group>"; };
-		07D0E4341949ADB60076850E /* ImageDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageDocument.m; sourceTree = "<group>"; };
 		AF70326B13BE5F9C006BAEFF /* ScreenSnapshot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenSnapshot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF70326F13BE5F9C006BAEFF /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		AF70327213BE5F9C006BAEFF /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -95,7 +92,6 @@
 			children = (
 				AF70328113BE5F9C006BAEFF /* ScreenSnapshotAppDelegate.h */,
 				AF70328213BE5F9C006BAEFF /* ScreenSnapshotAppDelegate.m */,
-				AFB80CC513C24B2000F10E0B /* Document */,
 				AF70328413BE5F9C006BAEFF /* MainMenu.xib */,
 				AF70327613BE5F9C006BAEFF /* Supporting Files */,
 			);
@@ -112,15 +108,6 @@
 				AF70327E13BE5F9C006BAEFF /* Credits.rtf */,
 			);
 			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		AFB80CC513C24B2000F10E0B /* Document */ = {
-			isa = PBXGroup;
-			children = (
-				07D0E4331949ADB60076850E /* ImageDocument.h */,
-				07D0E4341949ADB60076850E /* ImageDocument.m */,
-			);
-			name = Document;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -187,7 +174,6 @@
 			files = (
 				AF70327C13BE5F9C006BAEFF /* main.m in Sources */,
 				AF70328313BE5F9C006BAEFF /* ScreenSnapshotAppDelegate.m in Sources */,
-				07D0E4351949ADB60076850E /* ImageDocument.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -54,8 +54,6 @@
 #import <IOKit/IOKitLib.h>
 #import <IOKit/Graphics/IOGraphicsLib.h>
 
-#import "ImageDocument.h"
-
 
 @interface ScreenSnapshotAppDelegate : NSObject <NSApplicationDelegate>
 {

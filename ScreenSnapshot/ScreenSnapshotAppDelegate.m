@@ -55,6 +55,8 @@
 
 #import "ScreenSnapshotAppDelegate.h"
 
+#define NORMALIZE(value) (value > 255 ? 255 : (value < 0 ? 0 : value))
+
 // DisplayRegisterReconfigurationCallback is a client-supplied callback function that’s invoked 
 // whenever the configuration of a local display is changed.  Applications who want to register 
 // for notifications of display changes would use CGDisplayRegisterReconfigurationCallback
@@ -221,11 +223,11 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     }
 }
 
-- (BOOL)highResolution
+- (BOOL)isHighResolution
 {
    int width =[[NSScreen mainScreen]frame].size.width;
    int height =[[NSScreen mainScreen]frame].size.width;
-    if (width==2880 && height==1800) {
+    if (width>2000 && height>1000) {
         return true;
     }
     return false;
@@ -235,31 +237,46 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
 {
     /* Save new image. */
     
-
+//    if (![self isHighResolution]) {
+//        [self getRGBArrayFromImage:anImage];
+//        return;
+//    }
     CGSize imageSize = CGSizeMake (
                                    CGImageGetWidth(anImage),
                                    CGImageGetHeight(anImage)
                                    );
     NSImage *nextImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
-    NSSize outputSize = NSMakeSize(512.0f,512.0f);
+    NSSize outputSize = NSMakeSize(imageSize.width/2,imageSize.height/2);
     NSImage *outputImage  = [self scaleImage:nextImage toSize:outputSize];
-    NSData *imgData = [outputImage TIFFRepresentation];
-    NSDate *currentDate = [NSDate date];
-    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *dataPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.png",dateStr]];
-    NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithData:imgData];
-//    NSSize pointsSize = bitmapRep.size;
-//    NSSize pixelSize = NSMakeSize(bitmapRep.pixelsWide, bitmapRep.pixelsHigh);
-//    CGFloat currentDPI = ceilf((72.0f * pixelSize.width)/pointsSize.width);
-//    NSLog(@"current DPI %f", currentDPI);
-//    NSSize updatedPointsSize = pointsSize;
-    NSData *saveData = [bitmapRep representationUsingType:NSPNGFileType properties:nil];
-    BOOL success2 = [saveData writeToFile:dataPath atomically:YES];
-    [nextImage release];
     
-    [self getRGBArrayFromImage:anImage];
+    NSSize outputImageSize = [outputImage size];
+    CGContextRef bitmapContext = CGBitmapContextCreate(NULL, outputImageSize.width, outputImageSize.height, 8, 0, [[NSColorSpace genericRGBColorSpace] CGColorSpace], kCGBitmapByteOrder32Host|kCGImageAlphaPremultipliedFirst);
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:bitmapContext flipped:NO]];
+    [outputImage drawInRect:NSMakeRect(0, 0, outputImageSize.width, outputImageSize.height) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
+    [NSGraphicsContext restoreGraphicsState];
+    
+    CGImageRef cgImage = CGBitmapContextCreateImage(bitmapContext);
+    CGContextRelease(bitmapContext);
+    [self getRGBArrayFromImage:cgImage];
+    
+//    NSData *imgData = [outputImage TIFFRepresentation];
+//    NSDate *currentDate = [NSDate date];
+//    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
+//    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES);
+//    NSString *documentsDirectory = [paths objectAtIndex:0];
+//    NSString *dataPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.png",dateStr]];
+//    NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithData:imgData];
+////    NSSize pointsSize = bitmapRep.size;
+////    NSSize pixelSize = NSMakeSize(bitmapRep.pixelsWide, bitmapRep.pixelsHigh);
+////    CGFloat currentDPI = ceilf((72.0f * pixelSize.width)/pointsSize.width);
+////    NSLog(@"current DPI %f", currentDPI);
+////    NSSize updatedPointsSize = pointsSize;
+//    NSData *saveData = [bitmapRep representationUsingType:NSPNGFileType properties:nil];
+//    BOOL success2 = [saveData writeToFile:dataPath atomically:YES];
+//    [nextImage release];
+    
+    
     
 }
 
@@ -396,43 +413,104 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
 //    printf("%s",rgb);
 }
 
-- (NSData *)convertImageDataToYUVFormatFromRGBBitStream:(uint8_t* )src byWidth:(size_t)width height:(size_t)height
+- (NSData *)convertImageDataToYUVFormatFromRGBBitStream:(uint8_t* )rgb byWidth:(size_t)width height:(size_t)height
 {
-    //uint8_t length = width*height*3/2;
-    uint8_t * YUV_Image= malloc(width*height*3/2); //YUV420 4个Y对应1个U,1个V,UV都变成原来的1/4
-    int i=0,j=0;
-    uint8_t uPos=0,vPos=0;//start position of u & v
-    vPos = width*height;
-    uPos = width*height*(1.25);
-    for(i=0;i<height;i++){
-        bool isV=false;
-        if(i%2==0) isV=true; // this is a U line
-        for(j=0;j<width;j++){
+//    //uint8_t length = width*height*3/2;
+//    uint8_t * YUV_Image= malloc(width*height*3/2); //YUV420 4个Y对应1个U,1个V,UV都变成原来的1/4
+//    int i=0,j=0;
+//    size_t vPos = width*height;
+//    size_t uPos = width*height*1.25;//start position of u & v
+//    
+//    for(i=0;i<height;i++){
+//        bool isV=false;
+//        if(i%2==0) isV=true; // this is a U line
+//        for(j=0;j<width;j++){
+//            
+//            size_t pos = width * i + j; // pixel position
+//            uint8_t B =1224 * src[pos*4];
+//            uint8_t G =2404 * src[pos*4+1];
+//            uint8_t R =467 * src[pos*4+2];
+//            uint8_t Y= B+G+R;
+//    
+//            uint8_t U= (uint8_t)((B-Y) * 493/1000);
+//            uint8_t V= (uint8_t)((R-Y) * 877/1000);
+//            
+//            
+//            YUV_Image[pos] = Y;//前面全部放为Y
+//            
+//            bool isChr=false;  // is this a chroma point
+//            if( j%2==0 ){
+//               isChr=true;
+//            }
+//            if( isChr && isV ){
+//               YUV_Image[vPos+(j+i*width)/2]=V;
+////                NSLog(@"V=%hhu",V);
+////                NSLog(@"vPos=%lu",vPos+(j+i*width)/2);
+//            }
+//            if( isChr && !isV ){
+//               YUV_Image[uPos+(j+i*width)/2]=U;
+////                NSLog(@"U=%hhu",U);
+////                NSLog(@"uPos=%lu",uPos+(j+i*width)/2);
+//            }
+//        }
+//    }
+    
+	size_t i;
+    size_t j;
+    size_t x;
+    size_t y;
+    
+    uint8_t * YUV_Image= malloc(width*height*3/2);
+    size_t vPos = width*height;
+    size_t uPos = width*height*1.25;
+    
+	for(y=0; y<height; y++)
+	{
+		for(x=0; x<width; x++)
+		{
+			j = y*width + x;
+			i = j*4;
             
-            size_t pos = width * i + j; // pixel position
-            uint8_t B = src[pos*4];
-            uint8_t G = src[pos*4+1];
-            uint8_t R = src[pos*4+2];
+			int a, b, c;
+			int yy;
+			a = 1224 * rgb[i];
+			b = 2404 * rgb[i+1];
+			c = 467 * rgb[i+2];
+			yy = a + b + c;
+			yy = yy >> 12;
+			YUV_Image[j] = (uint8_t)yy;
             
-            uint8_t Y= (uint8_t)(0.3*R + 0.59*G + 0.11*B);
-            uint8_t U= (uint8_t)((B-Y) * 0.493);
-            uint8_t V= (uint8_t)((R-Y) * 0.877);
-            
-            
-            YUV_Image[pos] = Y;//前面全部放为YUV
-            
-            bool isChr=false;  // is this a chroma point
-            if( j%2==0 ){
-               isChr=true;
-            }
-            if( isChr && isV ){
-               YUV_Image[vPos+j/2]=U;
-            }
-            if( isChr&& !isV ){
-               YUV_Image[uPos+j/2]=V;
-            }
-        }
-    }
+            //
+			if(x%2 == 1 && y%2 == 1)
+			{
+				j = (width>>1) * (y>>1) + (x>>1);
+                
+				int uu;
+				int a, b, c;
+				a = 2766*rgb[i];
+				b = 5426*rgb[i+1];
+				c = 8192*rgb[i+2];
+				uu = c - a - b;
+				uu = uu>>14;
+				uu += 128;
+//				U[j] = (unsigned char)uu;
+                YUV_Image[uPos+j] = (uint8_t)uu;
+                
+				int vv;
+				//int a, b, c;
+				a = 8192*rgb[i];
+				b = 6855*rgb[i+1];
+				c = 1337*rgb[i+2];
+				vv = a - b - c;
+				vv = vv>>14;
+				vv += 128;
+				//NORMALIZE(vv);
+				//V[j] = (unsigned char)vv;
+                YUV_Image[vPos+j] = (uint8_t)vv;
+			}
+		}
+	}
+
     return [NSData dataWithBytesNoCopy:YUV_Image length:(width*height*3/2)];
 }
 
