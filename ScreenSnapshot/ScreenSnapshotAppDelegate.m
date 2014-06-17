@@ -54,6 +54,8 @@
  */
 
 #import "ScreenSnapshotAppDelegate.h"
+#import "ScreenShotManager.h"
+#import "x264Encoder.h"
 
 #define NORMALIZE(value) (value > 255 ? 255 : (value < 0 ? 0 : value))
 
@@ -115,8 +117,7 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     /* Save the shared NSDocumentController for use later. */
-    documentController = [[NSDocumentController sharedDocumentController] retain];
-        
+    
     displays = nil;
     
     /* Populate the Capture menu with a list of displays by iterating over all of the displays. */
@@ -183,11 +184,11 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
 - (void)captureScreenPerSecond
 {
     for (int i=0; i<20; i++) {
-        [self captureCurrentScreen];
+        [self captureScreenForDisplayIndex:0];
     }
 }
 
-- (void)captureCurrentScreen
+- (void)captureScreenForDisplayIndex:(NSInteger)displaysIndex
 {
     pictureCount++;
     NSLog(@"count = %d",pictureCount);
@@ -197,7 +198,7 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
         return;
     }
     
-    NSInteger displaysIndex = 0;
+//    NSInteger displaysIndex = 0;
     
     /* Make a snapshot image of the current display. */
     CGImageRef image = CGDisplayCreateImage(displays[displaysIndex]);
@@ -208,7 +209,7 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     if (1)
     {
         /* Save the CGImageRef with the document. */
-        [self saveImageToDesk:image];
+        [self compressImage:image rate:0.5];
     }
     else
     {
@@ -233,7 +234,7 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     return false;
 }
 
-- (void)saveImageToDesk:(CGImageRef)anImage
+- (void)compressImage:(CGImageRef)anImage rate:(float)rate
 {
     /* Save new image. */
     
@@ -246,7 +247,7 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
                                    CGImageGetHeight(anImage)
                                    );
     NSImage *nextImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
-    NSSize outputSize = NSMakeSize(imageSize.width/2,imageSize.height/2);
+    NSSize outputSize = NSMakeSize(imageSize.width*rate,imageSize.height*rate);
     NSImage *outputImage  = [self scaleImage:nextImage toSize:outputSize];
     
     NSSize outputImageSize = [outputImage size];
@@ -368,6 +369,8 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     //int len = [data length];
 
     NSData *yuvData =[self convertImageDataToYUVFormatFromRGBBitStream:(uint8_t*)bytes byWidth:width height:height];
+    
+    /*output to .yuv files*/
     NSDate *currentDate = [NSDate date];
     NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES);
@@ -375,6 +378,14 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     NSString *dataPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.yuv",dateStr]];
     BOOL success2 = [yuvData writeToFile:dataPath atomically:YES];
     
+    const uint8_t *yuvBytes = [yuvData bytes];
+    
+    x264Encoder *encoder = [[x264Encoder alloc]init];
+    int aWidth = (int)width;
+    int aHeight = (int)height;
+    [encoder initForX264WithWidth:aWidth height:aHeight];
+    [encoder initForFilePath];
+    [encoder encodeToH264:yuvBytes];
     /**
      *  分配rgba空间
      */
