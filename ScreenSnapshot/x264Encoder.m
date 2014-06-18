@@ -8,6 +8,14 @@
 
 #import "x264Encoder.h"
 
+
+#define kDefaultBandwidth			500
+#define kAvgBitrateCoef				0.6
+#define kMaxBitrateCoef				0.8
+#define kBitPerByte					8
+#define kShortTermDelayStatScope	5
+#define kLongTermDelayStatScope		30
+
 @interface x264Encoder ()
 
 @property(assign,nonatomic)int frameWidth;
@@ -21,6 +29,15 @@
 
 - (void)initForX264WithWidth:(int)width height:(int)height{
     
+    int bitrate, maxbitrate;
+    int m_maxBandwidth =0;
+	if (m_maxBandwidth == 0)
+	{
+		m_maxBandwidth = kDefaultBandwidth;
+	}
+    
+	bitrate = m_maxBandwidth * kAvgBitrateCoef * kBitPerByte;
+	maxbitrate = m_maxBandwidth * kMaxBitrateCoef * kBitPerByte;
     
     self.frameHeight = height;
     self.frameWidth = width;
@@ -28,21 +45,54 @@
     p264Pic  =malloc(sizeof(x264_picture_t));//raw image data for storing image data
     memset(p264Pic,0,sizeof(x264_picture_t));//clear memory
     x264_param_default_preset(p264Param,"veryfast","zerolatency");//set encoder params
+    p264Param->i_lookahead_threads =0;
+    p264Param->i_bframe =0;
     p264Param->i_threads =1;/* encode multiple frames in parallel */
+    p264Param->i_keyint_max=200;
+    p264Param->i_frame_reference =1;
+    p264Param->i_scenecut_threshold =0;
+    p264Param->i_bframe_adaptive = X264_B_ADAPT_NONE;
     p264Param->i_width   =width;  //set frame width
     p264Param->i_height  =height;  //set frame height
-    p264Param->b_cabac =0;
-    p264Param->i_bframe =0;
-    p264Param->b_interlaced=0;
-    p264Param->rc.i_rc_method=X264_RC_ABR;//X264_RC_CQP
     p264Param->i_level_idc=21;
-    p264Param->rc.i_bitrate=128;
-    p264Param->b_intra_refresh =1;
-    p264Param->b_annexb =1;
-    p264Param->i_keyint_max=25;
     p264Param->i_fps_num=15;
     p264Param->i_fps_den=1;
+    
+    p264Param->b_vfr_input =0;
+    p264Param->b_deblocking_filter=0;
+    p264Param->b_cabac =0;
+    p264Param->b_repeat_headers = 1;
+    p264Param->b_interlaced=0;
+    p264Param->b_intra_refresh =1;
     p264Param->b_annexb =1;
+  
+
+    p264Param->analyse.intra = 0;
+	p264Param->analyse.inter = 0;
+	p264Param->analyse.i_me_method = X264_ME_DIA;
+	p264Param->analyse.b_transform_8x8 = 0;
+	p264Param->analyse.i_weighted_pred = X264_WEIGHTP_NONE;
+	p264Param->analyse.b_weighted_bipred = 0;
+	p264Param->analyse.i_subpel_refine = 0;
+	p264Param->analyse.b_mixed_references = 0;
+	p264Param->analyse.i_trellis = 0;
+	
+	//param.rc.i_rc_method = X264_RC_CQP;
+	//param.rc.i_qp_constant = 25;
+	//param.rc.i_qp_max = 20;
+	//param.rc.i_qp_min = 40;
+	//param.rc.i_rc_method = X264_RC_CRF;
+    
+	//rate control params
+	p264Param->rc.i_rc_method = X264_RC_ABR;
+    p264Param->rc.i_aq_mode = X264_AQ_NONE;
+	p264Param->rc.i_bitrate = bitrate;
+	p264Param->rc.i_vbv_max_bitrate = maxbitrate;
+	p264Param->rc.i_vbv_buffer_size = bitrate;
+	p264Param->rc.b_mb_tree = 0;
+	p264Param->rc.i_lookahead = 0;
+    
+	
     //    p264Param->i_csp = X264_CSP_I420;
     /*      (can be NULL, in which case the function will do nothing)
      *
@@ -71,9 +121,8 @@
 
 
 - (void)initForFilePath{
-    NSDate *date = [NSDate date];
-    NSString *dateStr = [NSString stringWithFormat:@"%@.h264",date];
-    const char *filename = [dateStr UTF8String];
+    NSString *nameStr = @"snapshot.h264";
+    const char *filename = [nameStr UTF8String];
     char *path = [self GetFilePathByfileName:filename];
     NSLog(@"%s",path);
     fp = fopen(path,"wb");
@@ -218,19 +267,14 @@
     int widthXheight = self.frameWidth*self.frameHeight;
     //输出的图片
     x264_picture_t pic_out;
+    //把数据分给三个通道
+    size_t vPos = widthXheight;
+    size_t uPos = widthXheight*5/4;
     
-    memcpy(p264Pic->img.plane[0], input,self.frameWidth*self.frameHeight);
-    memcpy(p264Pic->img.plane[1], input + widthXheight, widthXheight >> 2);
-    memcpy(p264Pic->img.plane[2], input + widthXheight + (widthXheight >> 2), widthXheight >> 2);
-    
-//    uint8_t * pDst1 = p264Pic->img.plane[1];
-//    uint8_t * pDst2 = p264Pic->img.plane[2];
-//    
-//    for( int i =0; i < self.frameWidth*self.frameHeight/4; i ++ )
-//    {
-//        *pDst1++ = *input++;
-//        *pDst2++ = *input++;
-//    }
+    memcpy(p264Pic->img.plane[0], input,widthXheight);
+    memcpy(p264Pic->img.plane[1], input+vPos, widthXheight>>2);
+    memcpy(p264Pic->img.plane[2], input+uPos, widthXheight>>2);
+
     /* x264_encoder_encode:
      *      encode one picture.
      *      *pi_nal is the number of NAL units outputted in pp_nal.
@@ -262,6 +306,11 @@
         }
         
     }
+}
+
+- (void)stopEncoding
+{
+    fclose(fp);
 }
 
 @end

@@ -53,7 +53,7 @@
 #import <Foundation/Foundation.h>
 #import <IOKit/IOKitLib.h>
 #import <IOKit/Graphics/IOGraphicsLib.h>
-
+#import "x264Encoder.h"
 
 @interface ScreenSnapshotAppDelegate : NSObject <NSApplicationDelegate>
 {
@@ -67,11 +67,12 @@
     
 	BOOL	 DisplayRegistrationCallBackSuccessful;
     
-    NSTimer *timer;
+    NSTimer *aTimer;
     
     int pictureCount;
-}
 
+}
+@property(retain,nonatomic)x264Encoder *encoder;
 -(void) interrogateHardware;
 -(void) disableUI;
 -(void) enableUI;

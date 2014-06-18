@@ -59,6 +59,9 @@
 
 #define NORMALIZE(value) (value > 255 ? 255 : (value < 0 ? 0 : value))
 
+const NSInteger kMainMenuOptionStartCaptureItemTag = 101;
+const NSInteger kMainMenuOptionStopCaptureItemTag = 102;
+
 // DisplayRegisterReconfigurationCallback is a client-supplied callback function that’s invoked 
 // whenever the configuration of a local display is changed.  Applications who want to register 
 // for notifications of display changes would use CGDisplayRegisterReconfigurationCallback
@@ -171,63 +174,53 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
 {
     NSMenuItem *menuItem = (NSMenuItem *)sender;
     
-    /* Get the index for the chosen display from the CGDirectDisplayID array. */
-    NSInteger displaysIndex = [menuItem tag];
+    NSInteger displaysIndex = menuItem.tag;
+    
+    switch (displaysIndex) {
+        case kMainMenuOptionStartCaptureItemTag:
+        {
+            if (!self.encoder) {
+                self.encoder = [[x264Encoder alloc]init];
+                int aWidth = [NSScreen mainScreen].frame.size.width;
+                int aHeight = [NSScreen mainScreen].frame.size.height;
+                [self.encoder initForX264WithWidth:aWidth height:aHeight];
+                [self.encoder initForFilePath];
+            }
+            aTimer =[NSTimer timerWithTimeInterval:(1/20) target:self selector:@selector(captureScreenPerSecond) userInfo:nil repeats:YES];
+            [aTimer fire];
+            [[NSRunLoop currentRunLoop] addTimer:aTimer forMode:NSRunLoopCommonModes];
+        }
+            break;
+        case kMainMenuOptionStopCaptureItemTag:
+        {
+            [aTimer invalidate];
+            [self.encoder stopEncoding];
+        }
+            break;
+        default:
+            break;
+    }
     
 //    NSDictionary *dic = @{@"index":[NSNumber numberWithInteger:displaysIndex]};
-    
-    timer = [[NSTimer timerWithTimeInterval:1 target:self selector:@selector(captureScreenPerSecond) userInfo:nil repeats:YES]retain];
-    [timer fire];
-    [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
 - (void)captureScreenPerSecond
 {
-    for (int i=0; i<20; i++) {
-        [self captureScreenForDisplayIndex:0];
-    }
+   [self captureScreenForDisplayIndex:0];
 }
 
 - (void)captureScreenForDisplayIndex:(NSInteger)displaysIndex
 {
-    pictureCount++;
-    NSLog(@"count = %d",pictureCount);
-    while (pictureCount>20) {
-        [timer invalidate];
-        pictureCount=0;
-        return;
-    }
     
-//    NSInteger displaysIndex = 0;
-    
-    /* Make a snapshot image of the current display. */
-    CGImageRef image = CGDisplayCreateImage(displays[displaysIndex]);
-    
-//    NSError *error = nil;
-//    /* Create a new document. */
-//    ImageDocument *newDocument = [documentController openUntitledDocumentAndDisplay:YES error:&error];
-    if (1)
-    {
-        /* Save the CGImageRef with the document. */
-        [self compressImage:image rate:0.5];
-    }
-    else
-    {
-        /* Display the error. */
-//        NSAlert *alert = [NSAlert alertWithError:error];
-//        [alert runModal];
-        return;
-    }
-    if (image)
-    {
-        CFRelease(image);
-    }
+    CGImageRef image = CGDisplayCreateImage(displays[displaysIndex]);//get image from screen
+    [self compressImage:image rate:0.5];
+    CFRelease(image);
 }
 
 - (BOOL)isHighResolution
 {
    int width =[[NSScreen mainScreen]frame].size.width;
-   int height =[[NSScreen mainScreen]frame].size.width;
+   int height =[[NSScreen mainScreen]frame].size.height;
     if (width>2000 && height>1000) {
         return true;
     }
@@ -246,21 +239,22 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
                                    CGImageGetWidth(anImage),
                                    CGImageGetHeight(anImage)
                                    );
-    NSImage *nextImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
+    //CGImage -> NSImage
+    NSImage *inputImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
     NSSize outputSize = NSMakeSize(imageSize.width*rate,imageSize.height*rate);
-    NSImage *outputImage  = [self scaleImage:nextImage toSize:outputSize];
-    
-    NSSize outputImageSize = [outputImage size];
-    CGContextRef bitmapContext = CGBitmapContextCreate(NULL, outputImageSize.width, outputImageSize.height, 8, 0, [[NSColorSpace genericRGBColorSpace] CGColorSpace], kCGBitmapByteOrder32Host|kCGImageAlphaPremultipliedFirst);
+    //modify size of image
+    NSImage *outputImage  = [self scaleImage:inputImage toSize:outputSize];
+    [inputImage release];
+    //
+    CGContextRef bitmapContext = CGBitmapContextCreate(NULL, outputSize.width, outputSize.height, 8, 0, [[NSColorSpace genericRGBColorSpace] CGColorSpace], kCGBitmapByteOrder32Host|kCGImageAlphaPremultipliedFirst);
     [NSGraphicsContext saveGraphicsState];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:bitmapContext flipped:NO]];
-    [outputImage drawInRect:NSMakeRect(0, 0, outputImageSize.width, outputImageSize.height) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
+    [outputImage drawInRect:NSMakeRect(0, 0, outputSize.width, outputSize.height) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
     [NSGraphicsContext restoreGraphicsState];
-    
     CGImageRef cgImage = CGBitmapContextCreateImage(bitmapContext);
     CGContextRelease(bitmapContext);
     [self getRGBArrayFromImage:cgImage];
-    
+    [outputImage release];
 //    NSData *imgData = [outputImage TIFFRepresentation];
 //    NSDate *currentDate = [NSDate date];
 //    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
@@ -331,7 +325,6 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
             thumbnailRect.origin = thumbnailPoint;
             thumbnailRect.size.width = scaledWidth;
             thumbnailRect.size.height = scaledHeight;
-            
             [image drawInRect:thumbnailRect
                      fromRect:NSZeroRect
                     operation:NSCompositeSourceOver
@@ -350,13 +343,13 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     size_t height = CGImageGetHeight(anImage);
     
     //bytes each row
-    size_t bytesPerRow = CGImageGetBytesPerRow(anImage);
+    //size_t bytesPerRow = CGImageGetBytesPerRow(anImage);
     //bits for each pixel 32
-    size_t bitsPerPixel = CGImageGetBitsPerPixel(anImage);
+    //size_t bitsPerPixel = CGImageGetBitsPerPixel(anImage);
     //bits for each color 8
-    size_t bitsPerComponent = CGImageGetBitsPerComponent(anImage);
+    //size_t bitsPerComponent = CGImageGetBitsPerComponent(anImage);
     // 4 bytes each pixel, r,g,b,a
-    size_t bytesPerPixel = bitsPerPixel / bitsPerComponent;
+    //size_t bytesPerPixel = bitsPerPixel / bitsPerComponent;
     
     CGDataProviderRef provider = CGImageGetDataProvider(anImage);
     NSData* data = (id)CGDataProviderCopyData(provider);
@@ -367,25 +360,21 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     const uint8_t* bytes = [data bytes];
     
     //int len = [data length];
-
-    NSData *yuvData =[self convertImageDataToYUVFormatFromRGBBitStream:(uint8_t*)bytes byWidth:width height:height];
     
     /*output to .yuv files*/
-    NSDate *currentDate = [NSDate date];
-    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *dataPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.yuv",dateStr]];
-    BOOL success2 = [yuvData writeToFile:dataPath atomically:YES];
+//    NSDate *currentDate = [NSDate date];
+//    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
+//    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES);
+//    NSString *documentsDirectory = [paths objectAtIndex:0];
+//    NSString *dataPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.yuv",dateStr]];
+    NSData *yuvData =[self convertImageDataToYUVFormatFromRGBBitStream:(uint8_t*)bytes byWidth:width height:height];
+    
+    //BOOL success2 = [yuvData writeToFile:dataPath atomically:YES];
     
     const uint8_t *yuvBytes = [yuvData bytes];
     
-    x264Encoder *encoder = [[x264Encoder alloc]init];
-    int aWidth = (int)width;
-    int aHeight = (int)height;
-    [encoder initForX264WithWidth:aWidth height:aHeight];
-    [encoder initForFilePath];
-    [encoder encodeToH264:yuvBytes];
+    [self.encoder encodeToH264:yuvBytes];
+
     /**
      *  分配rgba空间
      */
@@ -473,7 +462,7 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     
     uint8_t * YUV_Image= malloc(width*height*3/2);
     size_t vPos = width*height;
-    size_t uPos = width*height*1.25;
+    size_t uPos = width*height*5/4;
     
 	for(y=0; y<height; y++)
 	{
@@ -651,28 +640,37 @@ static void DisplayRegisterReconfigurationCallback (CGDirectDisplayID display, C
     }
 
     /* Create the 'Capture Screen' menu. */
-    NSMenu *captureMenu = [[NSMenu alloc] initWithTitle:@"Capture Screen"];
+    NSMenu *captureMenu = [[NSMenu alloc] initWithTitle:@"Capture"];
 
     int i;
     /* Now we iterate through them. */
-    for(i = 0; i < dspCount; i++)
-    {
-        /* Get display name for the selected display. */
-        NSString* name = [self displayNameFromDisplayID:displays[i]];
-
-        /* Create new menu item for the display. */
-        NSMenuItem *displayMenuItem = [[NSMenuItem alloc] initWithTitle:name action:@selector(selectDisplayItem:) keyEquivalent:@""];
-        /* Save display index with the menu item. That way, when it is selected we can easily retrieve
-           the display ID from the displays array. */
-        [displayMenuItem setTag:i];
-        /* Add the display menu item to the menu. */
-        [captureMenu addItem:displayMenuItem];
-        
-        [displayMenuItem release];
-    }
+    
+//    for(i = 0; i < dspCount; i++)
+//    {
+//        /* Get display name for the selected display. */
+//        NSString* name = [self displayNameFromDisplayID:displays[i]];
+//
+//        /* Create new menu item for the display. */
+//    }
+    NSMenuItem *startMenuItem = [[NSMenuItem alloc] initWithTitle:@"Start" action:@selector(selectDisplayItem:) keyEquivalent:@""];
+    /* Save display index with the menu item. That way, when it is selected we can easily retrieve
+     the display ID from the displays array. */
+    [startMenuItem setTag:kMainMenuOptionStartCaptureItemTag];
+    /* Add the display menu item to the menu. */
+    [captureMenu addItem:startMenuItem];
+    [startMenuItem release];
+    
+    NSMenuItem *stopMenuItem = [[NSMenuItem alloc] initWithTitle:@"Stop" action:@selector(selectDisplayItem:) keyEquivalent:@""];
+    /* Save display index with the menu item. That way, when it is selected we can easily retrieve
+     the display ID from the displays array. */
+    [stopMenuItem setTag:kMainMenuOptionStopCaptureItemTag];
+    /* Add the display menu item to the menu. */
+    [captureMenu addItem:stopMenuItem];
+    [stopMenuItem release];
     
     /* Set the display menu items as a submenu of the Capture menu. */
     [captureMenuItem setSubmenu:captureMenu];
+    
     [captureMenu release];
 }
 
