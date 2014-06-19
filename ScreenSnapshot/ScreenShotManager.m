@@ -7,19 +7,30 @@
 //
 
 #import "ScreenShotManager.h"
+#import <IOKit/IOKitLib.h>
+#import <IOKit/Graphics/IOGraphicsLib.h>
+#import "x264Encoder.h"
 
-const NSInteger retinaDisplayScreenWidth = 2000;
-const NSInteger retinaDisplayScreenHeight = 1000;
+#define IS_RETINA ([[NSScreen mainScreen]backingScaleFactor] > 1.0)
+
+const NSInteger kDefaultFramesPerSec = 20;
+const CGFloat kDefaultCompressRate = 0.5;
+
 
 
 @interface ScreenShotManager ()
+{
+   NSTimer *timer;
+}
+@property(nonatomic,retain)x264Encoder *encoder;
 
-@property(retain,nonatomic)NSTimer *timer;
 - (NSImage *)scaleImage:(NSImage *)image toSize:(NSSize)targetSize;
 
-- (void)compressImage:(CGImageRef)anImage atRate:(float)rate;
+- (BOOL)compressImage:(CGImageRef)anImage atRate:(float)rate;
 
 - (CGDirectDisplayID *)displayIDs;
+
+- (void)saveImage:(CGImageRef)anImage;
 
 - (NSString *)displayDeviceNameFromDisplayID:(CGDirectDisplayID)displayID;
 
@@ -45,88 +56,108 @@ const NSInteger retinaDisplayScreenHeight = 1000;
     return _sharedManager;
 }
 
-- (BOOL)isRetinaDisplay
+- (id)init
 {
-    int width =[[NSScreen mainScreen]frame].size.width;
-    int height =[[NSScreen mainScreen]frame].size.height;
-    if (width>retinaDisplayScreenWidth && height>retinaDisplayScreenHeight) {
-        return true;
+    if (self = [super init]) {
+        self.framePerSec = kDefaultFramesPerSec;
+        self.selectedScreenIndex = 0;
+        self.compressRate = kDefaultCompressRate;
+        [self initDisplayList];
     }
-    return false;
+    return self;
+}
+
+
+- (void)initDisplayList
+{
+    CGError				err = CGDisplayNoErr;
+	CGDisplayCount		dspCount = 0;
+    
+    err = CGGetActiveDisplayList(0, NULL, &dspCount);
+    
+    self.displayCount = dspCount;
+    
+    if(err != CGDisplayNoErr)
+    {
+        NSLog(@"getting dispaly list error = %d",err);
+        return;
+    }
+    
+    self.displayIDs = calloc((size_t)dspCount, sizeof(CGDirectDisplayID));
+    
+    err = CGGetActiveDisplayList(dspCount,
+                                 self.displayIDs,
+                                 &dspCount);
+	
+    if(err != CGDisplayNoErr)
+    {
+        NSLog(@"Could not get active display list (%d)\n", err);
+        return;
+    }
 }
 
 - (void)startCaptureScreen
 {
-    if (!self.timer) {
-        self.timer = [[NSTimer timerWithTimeInterval:1 target:self selector:@selector(captureScreenPerSecond) userInfo:nil repeats:YES]retain];
-    }
-    [self.timer fire];
-    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+        if (!self.encoder) {
+            self.encoder = [[x264Encoder alloc]init];
+            int aWidth = [NSScreen mainScreen].frame.size.width;
+            int aHeight = [NSScreen mainScreen].frame.size.height;
+            [self.encoder initForX264WithWidth:aWidth height:aHeight];
+            [self.encoder initForFilePath];
+        }
+        timer =[NSTimer timerWithTimeInterval:(1/self.framePerSec) target:self selector:@selector(captureScreen) userInfo:nil repeats:YES];
+        [timer fire];
+        [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
 - (void)stopCaptureScreen
 {
-    if (!self.timer) {
+    if (!timer) {
         return;
     }
-    [self.timer invalidate];
+    [self.encoder stopEncoding];
+    [timer invalidate];
 }
 
-- (void)captureScreenPerSecond
+
+- (void)captureScreen
 {
-    for (int i=0; i<20; i++) {
-        [self keepCapturingScreen];
-    }
+    CGDirectDisplayID *displays = self.displayIDs;
+    NSInteger index = self.selectedScreenIndex;
+    CGFloat rate = self.compressRate;
+    CGImageRef image = CGDisplayCreateImage(displays[index]);
+    [self compressImage:image rate:rate];
+    CFRelease(image);
 }
 
-- (void)keepCapturingScreen
-{
-    /* Make a snapshot image of the current display. */
-    CGImageRef image = CGDisplayCreateImage(self.displayIDs[self.currentDisplayDeviceIndex]);
-
-    if ([self compressImage:image rate:0.5])
-    {
-        /* Save the CGImageRef with the document. */
-        
-    }
-    else
-    {
-        /* Display the error. */
-        //        NSAlert *alert = [NSAlert alertWithError:error];
-        //        [alert runModal];
-        return;
-    }
-    if (image)
-    {
-        CFRelease(image);
-    }
-}
-
-- (BOOL)compressImage:(CGImageRef)anImage rate:(float)rate
+- (void)compressImage:(CGImageRef)anImage rate:(float)rate
 {
     /* if not retina display, no need to compress. */
-    if (![self isRetinaDisplay]) {
-        return [self saveImage:anImage];
-    }
+//    if (!IS_RETINA) {
+//        [self saveImage:anImage];
+//        return;
+//    }
     CGSize imageSize = CGSizeMake (
                                    CGImageGetWidth(anImage),
                                    CGImageGetHeight(anImage)
                                    );
-    NSImage *nextImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
+    //CGImage -> NSImage
+    NSImage *inputImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
     NSSize outputSize = NSMakeSize(imageSize.width*rate,imageSize.height*rate);
-    NSImage *outputImage  = [self scaleImage:nextImage toSize:outputSize];
-    
-    NSSize outputImageSize = [outputImage size];
-    CGContextRef bitmapContext = CGBitmapContextCreate(NULL, outputImageSize.width, outputImageSize.height, 8, 0, [[NSColorSpace genericRGBColorSpace] CGColorSpace], kCGBitmapByteOrder32Host|kCGImageAlphaPremultipliedFirst);
+    //modify size of image
+    NSImage *outputImage  = [self scaleImage:inputImage toSize:outputSize];
+    [inputImage release];
+    //
+    CGContextRef bitmapContext = CGBitmapContextCreate(NULL, outputSize.width, outputSize.height, 8, 0, [[NSColorSpace genericRGBColorSpace] CGColorSpace], kCGBitmapByteOrder32Host|kCGImageAlphaPremultipliedFirst);
     [NSGraphicsContext saveGraphicsState];
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:bitmapContext flipped:NO]];
-    [outputImage drawInRect:NSMakeRect(0, 0, outputImageSize.width, outputImageSize.height) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
+    [outputImage drawInRect:NSMakeRect(0, 0, outputSize.width, outputSize.height) fromRect:NSZeroRect operation:NSCompositeCopy fraction:1.0];
+    [outputImage release];
     [NSGraphicsContext restoreGraphicsState];
-    
     CGImageRef cgImage = CGBitmapContextCreateImage(bitmapContext);
     CGContextRelease(bitmapContext);
-    
-    return [self saveImage:cgImage];
+    [self saveImage:cgImage];
+    CGImageRelease(cgImage);
 }
 
 - (NSImage *)scaleImage:(NSImage *)image toSize:(NSSize)targetSize
@@ -193,37 +224,9 @@ const NSInteger retinaDisplayScreenHeight = 1000;
 }
 
 
-- (NSString *)displayNameFromDisplayID:(CGDirectDisplayID)displayID
-{
-    NSString *displayProductName = nil;
-    
-    /* Get a CFDictionary with a key for the preferred name of the display. */
-    NSDictionary *displayInfo = (NSDictionary *)IODisplayCreateInfoDictionary(CGDisplayIOServicePort(displayID), kIODisplayOnlyPreferredName);
-    /* Retrieve the display product name. */
-    NSDictionary *localizedNames = [displayInfo objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
-    
-    /* Use the first name. */
-    if ([localizedNames count] > 0)
-    {
-        displayProductName = [[localizedNames objectForKey:[[localizedNames allKeys] objectAtIndex:0]] retain];
-    }
-    
-    [displayInfo release];
-    return [displayProductName autorelease];
-}
-
-- (BOOL)saveImage:(CGImageRef)anImage{
+- (void)saveImage:(CGImageRef)anImage{
     size_t width  = CGImageGetWidth(anImage);
     size_t height = CGImageGetHeight(anImage);
-    
-    //bytes each row
-    size_t bytesPerRow = CGImageGetBytesPerRow(anImage);
-    //bits for each pixel 32
-    size_t bitsPerPixel = CGImageGetBitsPerPixel(anImage);
-    //bits for each color 8
-    size_t bitsPerComponent = CGImageGetBitsPerComponent(anImage);
-    // 4 bytes each pixel, r,g,b,a
-    size_t bytesPerPixel = bitsPerPixel / bitsPerComponent;
     
     CGDataProviderRef provider = CGImageGetDataProvider(anImage);
     NSData* data = (id)CGDataProviderCopyData(provider);
@@ -233,27 +236,25 @@ const NSInteger retinaDisplayScreenHeight = 1000;
      */
     const uint8_t* bytes = [data bytes];
     
-    //int len = [data length];
-    
     NSData *yuvData =[self convertImageDataFormatToYUVFromRGB:(uint8_t*)bytes byWidth:width height:height];
-    NSDate *currentDate = [NSDate date];
-    NSString *dateStr = [NSString stringWithFormat:@"%@",currentDate];
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSPicturesDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *dataPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.yuv",dateStr]];
-    return [yuvData writeToFile:dataPath atomically:YES];
+    
+    const uint8_t *yuvBytes = [yuvData bytes];
+    
+    [self.encoder encodeToH264:yuvBytes];
 }
+
 
 - (NSData *)convertImageDataFormatToYUVFromRGB:(uint8_t *)rgb byWidth:(size_t)width height:(size_t)height{
    	
-    size_t i;
+    
+	size_t i;
     size_t j;
     size_t x;
     size_t y;
     
     uint8_t * YUV_Image= malloc(width*height*3/2);
     size_t vPos = width*height;
-    size_t uPos = width*height*1.25;
+    size_t uPos = width*height*5/4;
     
 	for(y=0; y<height; y++)
 	{

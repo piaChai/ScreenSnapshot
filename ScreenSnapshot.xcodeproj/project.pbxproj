@@ -7,11 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		07682F9E194E8DE0001B99D4 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07682F9D194E8DE0001B99D4 /* OpenCL.framework */; };
-		07682F9F194E8DE7001B99D4 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07682F9B194E8DC7001B99D4 /* OpenGL.framework */; };
 		076832AD194EF05B001B99D4 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 076832AC194EF05B001B99D4 /* libx264.a */; };
 		076832EF194EF1AA001B99D4 /* x264Encoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 076832EE194EF1AA001B99D4 /* x264Encoder.m */; };
-		076832F1194EF277001B99D4 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 076832F0194EF277001B99D4 /* CoreMedia.framework */; };
 		0768337E194EF3FB001B99D4 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 076832F3194EF3FB001B99D4 /* .gitignore */; };
 		0768337F194EF3FB001B99D4 /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = 076832F4194EF3FB001B99D4 /* AUTHORS */; };
 		076833A2194EF3FB001B99D4 /* config.guess in Resources */ = {isa = PBXBuildFile; fileRef = 07683341194EF3FB001B99D4 /* config.guess */; };
@@ -38,7 +35,6 @@
 		076833BB194EF3FB001B99D4 /* version.sh in Resources */ = {isa = PBXBuildFile; fileRef = 0768337A194EF3FB001B99D4 /* version.sh */; };
 		076833BC194EF3FB001B99D4 /* x264res.rc in Resources */ = {isa = PBXBuildFile; fileRef = 0768337D194EF3FB001B99D4 /* x264res.rc */; };
 		076833C1194EF98C001B99D4 /* ScreenShotManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 076833C0194EF98C001B99D4 /* ScreenShotManager.m */; };
-		076833C5194FC742001B99D4 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 076833C4194FC742001B99D4 /* CoreVideo.framework */; };
 		AF70327013BE5F9C006BAEFF /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF70326F13BE5F9C006BAEFF /* Cocoa.framework */; };
 		AF70327A13BE5F9C006BAEFF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AF70327813BE5F9C006BAEFF /* InfoPlist.strings */; };
 		AF70327C13BE5F9C006BAEFF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AF70327B13BE5F9C006BAEFF /* main.m */; };
@@ -50,12 +46,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		07682F9B194E8DC7001B99D4 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		07682F9D194E8DE0001B99D4 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = System/Library/Frameworks/OpenCL.framework; sourceTree = SDKROOT; };
 		076832AC194EF05B001B99D4 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
 		076832ED194EF1AA001B99D4 /* x264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x264Encoder.h; sourceTree = "<group>"; };
 		076832EE194EF1AA001B99D4 /* x264Encoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = x264Encoder.m; sourceTree = "<group>"; };
-		076832F0194EF277001B99D4 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		076832F3194EF3FB001B99D4 /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		076832F4194EF3FB001B99D4 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
 		076832FA194EF3FB001B99D4 /* dct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dct.h; sourceTree = "<group>"; };
@@ -144,7 +137,6 @@
 		076833BE194EF5EB001B99D4 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		076833BF194EF98C001B99D4 /* ScreenShotManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScreenShotManager.h; sourceTree = "<group>"; };
 		076833C0194EF98C001B99D4 /* ScreenShotManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScreenShotManager.m; sourceTree = "<group>"; };
-		076833C4194FC742001B99D4 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		AF70326B13BE5F9C006BAEFF /* ScreenSnapshot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenSnapshot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF70326F13BE5F9C006BAEFF /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		AF70327213BE5F9C006BAEFF /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -167,10 +159,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				076833C5194FC742001B99D4 /* CoreVideo.framework in Frameworks */,
-				076832F1194EF277001B99D4 /* CoreMedia.framework in Frameworks */,
-				07682F9F194E8DE7001B99D4 /* OpenGL.framework in Frameworks */,
-				07682F9E194E8DE0001B99D4 /* OpenCL.framework in Frameworks */,
 				AF70327013BE5F9C006BAEFF /* Cocoa.framework in Frameworks */,
 				AF70329113BE6842006BAEFF /* ApplicationServices.framework in Frameworks */,
 				AFA93DC913BF8FBF00F7F31F /* IOKit.framework in Frameworks */,
@@ -430,10 +418,6 @@
 		AF70326E13BE5F9C006BAEFF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				076833C4194FC742001B99D4 /* CoreVideo.framework */,
-				076832F0194EF277001B99D4 /* CoreMedia.framework */,
-				07682F9D194E8DE0001B99D4 /* OpenCL.framework */,
-				07682F9B194E8DC7001B99D4 /* OpenGL.framework */,
 				AFA93DC813BF8FBF00F7F31F /* IOKit.framework */,
 				AF70329013BE6842006BAEFF /* ApplicationServices.framework */,
 				AF70326F13BE5F9C006BAEFF /* Cocoa.framework */,

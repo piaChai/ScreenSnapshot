@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "x264.h"
 #import "common.h"
-#import <CoreMedia/CoreMedia.h>
 
 
 @interface x264Encoder : NSObject

@@ -7,21 +7,25 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <IOKit/IOKitLib.h>
-#import <IOKit/Graphics/IOGraphicsLib.h>
+
+
 
 @interface ScreenShotManager : NSObject
-@property(assign,nonatomic)NSInteger screenShotCount;
-@property(assign,nonatomic)NSInteger currentDisplayDeviceIndex;
-@property(assign,nonatomic)CGDirectDisplayID *displayIDs;
+@property(assign,nonatomic)NSInteger selectedScreenIndex;
+
+@property(assign,nonatomic)CGDirectDisplayID *displayIDs;//开一个线程不停刷新屏幕列表?
+@property(assign,nonatomic)CGDisplayCount displayCount;
+
 @property(copy,nonatomic)NSString *filePath;
 
-+ (ScreenShotManager *)sharedManager;
+@property(assign,nonatomic)NSInteger framePerSec;
+@property(assign,nonatomic)CGFloat compressRate;
 
-- (BOOL)isRetinaDisplay;
++ (ScreenShotManager *)sharedManager;
 
 - (void)startCaptureScreen;
 
 - (void)stopCaptureScreen;
+
 
 @end
