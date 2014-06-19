@@ -28,11 +28,8 @@ const CGFloat kDefaultCompressRate = 0.5;
 
 - (BOOL)compressImage:(CGImageRef)anImage atRate:(float)rate;
 
-- (CGDirectDisplayID *)displayIDs;
 
 - (void)saveImage:(CGImageRef)anImage;
-
-- (NSString *)displayDeviceNameFromDisplayID:(CGDirectDisplayID)displayID;
 
 - (NSData *)convertImageDataFormatToYUVFromRGB:(uint8_t* )rgb
                                        byWidth:(size_t)width
@@ -98,13 +95,6 @@ const CGFloat kDefaultCompressRate = 0.5;
 
 - (void)startCaptureScreen
 {
-        if (!self.encoder) {
-            self.encoder = [[x264Encoder alloc]init];
-            int aWidth = [NSScreen mainScreen].frame.size.width;
-            int aHeight = [NSScreen mainScreen].frame.size.height;
-            [self.encoder initForX264WithWidth:aWidth height:aHeight];
-            [self.encoder initForFilePath];
-        }
         timer =[NSTimer timerWithTimeInterval:(1/self.framePerSec) target:self selector:@selector(captureScreen) userInfo:nil repeats:YES];
         [timer fire];
         [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
@@ -239,7 +229,11 @@ const CGFloat kDefaultCompressRate = 0.5;
     NSData *yuvData =[self convertImageDataFormatToYUVFromRGB:(uint8_t*)bytes byWidth:width height:height];
     
     const uint8_t *yuvBytes = [yuvData bytes];
-    
+    if (!self.encoder) {
+        self.encoder = [[x264Encoder alloc]init];
+        [self.encoder initForX264WithWidth:(int)width height:(int)height];
+        [self.encoder initForFilePath];
+    }
     [self.encoder encodeToH264:yuvBytes];
 }
 
