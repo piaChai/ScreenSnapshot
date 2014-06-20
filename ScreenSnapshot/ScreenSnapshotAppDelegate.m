@@ -13,8 +13,8 @@ static NSInteger const kScreenMenuItemScreenItemTag = 103;
 
 @implementation ScreenSnapshotAppDelegate
 
--(void) dealloc
-{
+-(void) dealloc{
+    
     [captureMenuItem release];
     
     [screenMenuItem release];
@@ -29,13 +29,11 @@ static NSInteger const kScreenMenuItemScreenItemTag = 103;
 #pragma mark - NSApplicationDelegate
 
 
-- (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)sender 
-{ 
+- (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)sender{
 	return NO; 
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
-{
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification{
     
     [self initCaptureMenuItem];
     
@@ -45,10 +43,8 @@ static NSInteger const kScreenMenuItemScreenItemTag = 103;
 
 #pragma mark - menu item init
 
-- (void)initScreenMenuItem
-{
+- (void)initScreenMenuItem{
     NSMenu *screenMenu = [[NSMenu alloc] initWithTitle:@"Screen"];
-    
     CGDisplayCount dspCount =[[ScreenShotManager sharedManager] displayCount];
     
     if (displays) {
@@ -68,8 +64,7 @@ static NSInteger const kScreenMenuItemScreenItemTag = 103;
     [screenMenuItem setSubmenu:screenMenu];
 }
 
-- (void)initCaptureMenuItem
-{
+- (void)initCaptureMenuItem{
     NSMenu *captureMenu = [[NSMenu alloc] initWithTitle:@"Capture"];
     
     NSMenuItem *startMenuItem = [[NSMenuItem alloc] initWithTitle:@"Start" action:@selector(selectCaptureItem:) keyEquivalent:@""];
@@ -89,8 +84,7 @@ static NSInteger const kScreenMenuItemScreenItemTag = 103;
 
 #pragma mark menu action event
 
-- (void)selectCaptureItem:(id)sender
-{
+- (void)selectCaptureItem:(id)sender{
     NSMenuItem *menuItem = (NSMenuItem *)sender;
     
     NSInteger displaysIndex = [menuItem tag];
@@ -111,8 +105,7 @@ static NSInteger const kScreenMenuItemScreenItemTag = 103;
     }
 }
 
-- (void)selectScreenItem:(id)sender
-{
+- (void)selectScreenItem:(id)sender{
     NSMenuItem *menuItem = (NSMenuItem *)sender;
     NSInteger screenIndex = [menuItem tag]-kScreenMenuItemScreenItemTag;
     NSInteger selectedIndex = [[ScreenShotManager sharedManager] selectedScreenIndex];
@@ -121,8 +114,7 @@ static NSInteger const kScreenMenuItemScreenItemTag = 103;
     [[ScreenShotManager sharedManager] setSelectedScreenIndex:screenIndex];
 }
 
--(NSString *)displayNameFromDisplayID:(CGDirectDisplayID)displayID
-{
+-(NSString *)displayNameFromDisplayID:(CGDirectDisplayID)displayID{
     NSString *displayProductName = nil;
     
     NSDictionary *displayInfo = (NSDictionary *)IODisplayCreateInfoDictionary(CGDisplayIOServicePort(displayID), kIODisplayOnlyPreferredName);

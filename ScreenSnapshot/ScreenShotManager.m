@@ -17,7 +17,6 @@ static CGFloat const kDefaultFramesPerSec = 20.0;
 static CGFloat const kDefaultCompressRate = 0.5;
 
 
-
 @interface ScreenShotManager ()
 {
    NSTimer *timer;
@@ -64,8 +63,7 @@ static CGFloat const kDefaultCompressRate = 0.5;
 }
 
 
-- (void)initDisplayList
-{
+- (void)initDisplayList{
     CGError				err = CGDisplayNoErr;
 	CGDisplayCount		dspCount = 0;
     
@@ -90,8 +88,7 @@ static CGFloat const kDefaultCompressRate = 0.5;
     }
 }
 
-- (void)startCaptureScreen
-{
+- (void)startCaptureScreen{
     timer =[NSTimer timerWithTimeInterval:(1.0/self.framePerSec)
                                    target:self
                                  selector:@selector(captureScreen)
@@ -101,8 +98,7 @@ static CGFloat const kDefaultCompressRate = 0.5;
     [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
-- (void)stopCaptureScreen
-{
+- (void)stopCaptureScreen{
     if (!timer) {
         return;
     }
@@ -112,8 +108,7 @@ static CGFloat const kDefaultCompressRate = 0.5;
 }
 
 
-- (void)captureScreen
-{
+- (void)captureScreen{
     CGDirectDisplayID *displays = self.displayIDs;
     NSInteger index = self.selectedScreenIndex;
     CGFloat rate = self.compressRate;
@@ -122,8 +117,7 @@ static CGFloat const kDefaultCompressRate = 0.5;
     CFRelease(image);
 }
 
-- (void)compressImage:(CGImageRef)anImage rate:(float)rate
-{
+- (void)compressImage:(CGImageRef)anImage rate:(float)rate{
     if (!IS_RETINA) {
         [self saveImage:anImage];
         return;
@@ -285,7 +279,6 @@ static CGFloat const kDefaultCompressRate = 0.5;
 			}
 		}
 	}
-    
     return [NSData dataWithBytesNoCopy:YUV_Image length:(width*height*3/2)];
 }
 
