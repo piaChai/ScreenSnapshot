@@ -641,7 +641,7 @@
 				GCC_PREFIX_HEADER = "ScreenSnapshot/ScreenSnapshot-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"~/x264",
+					"$(SRCROOT)/ScreenSnapshot/x264",
 				);
 				INFOPLIST_FILE = "ScreenSnapshot/ScreenSnapshot-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -660,7 +660,7 @@
 				GCC_PREFIX_HEADER = "ScreenSnapshot/ScreenSnapshot-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
-					"~/x264",
+					"$(SRCROOT)/ScreenSnapshot/x264",
 				);
 				INFOPLIST_FILE = "ScreenSnapshot/ScreenSnapshot-Info.plist";
 				LIBRARY_SEARCH_PATHS = (

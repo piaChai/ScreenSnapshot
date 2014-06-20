@@ -13,8 +13,8 @@
 
 #define IS_RETINA ([[NSScreen mainScreen]backingScaleFactor] > 1.0)
 
-const NSInteger kDefaultFramesPerSec = 20;
-const CGFloat kDefaultCompressRate = 0.5;
+static CGFloat const kDefaultFramesPerSec = 20.0;
+static CGFloat const kDefaultCompressRate = 0.5;
 
 
 
@@ -24,10 +24,9 @@ const CGFloat kDefaultCompressRate = 0.5;
 }
 @property(nonatomic,retain)x264Encoder *encoder;
 
-- (NSImage *)scaleImage:(NSImage *)image toSize:(NSSize)targetSize;
+- (NSImage *)initImage:(NSImage *)image withSize:(NSSize)targetSize;
 
 - (BOOL)compressImage:(CGImageRef)anImage atRate:(float)rate;
-
 
 - (void)saveImage:(CGImageRef)anImage;
 
@@ -39,7 +38,7 @@ const CGFloat kDefaultCompressRate = 0.5;
 
 @implementation ScreenShotManager
 
-+ (ScreenShotManager *)sharedManager {
++ (ScreenShotManager *)sharedManager{
     
     static ScreenShotManager *_sharedManager;
     
@@ -53,8 +52,8 @@ const CGFloat kDefaultCompressRate = 0.5;
     return _sharedManager;
 }
 
-- (id)init
-{
+- (id)init{
+    
     if (self = [super init]) {
         self.framePerSec = kDefaultFramesPerSec;
         self.selectedScreenIndex = 0;
@@ -74,8 +73,7 @@ const CGFloat kDefaultCompressRate = 0.5;
     
     self.displayCount = dspCount;
     
-    if(err != CGDisplayNoErr)
-    {
+    if(err != CGDisplayNoErr){
         NSLog(@"getting dispaly list error = %d",err);
         return;
     }
@@ -86,8 +84,7 @@ const CGFloat kDefaultCompressRate = 0.5;
                                  self.displayIDs,
                                  &dspCount);
 	
-    if(err != CGDisplayNoErr)
-    {
+    if(err != CGDisplayNoErr){
         NSLog(@"Could not get active display list (%d)\n", err);
         return;
     }
@@ -95,9 +92,13 @@ const CGFloat kDefaultCompressRate = 0.5;
 
 - (void)startCaptureScreen
 {
-        timer =[NSTimer timerWithTimeInterval:(1/self.framePerSec) target:self selector:@selector(captureScreen) userInfo:nil repeats:YES];
-        [timer fire];
-        [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+    timer =[NSTimer timerWithTimeInterval:(1.0/self.framePerSec)
+                                   target:self
+                                 selector:@selector(captureScreen)
+                                 userInfo:nil
+                                  repeats:YES];
+    [timer fire];
+    [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
 - (void)stopCaptureScreen
@@ -107,6 +108,7 @@ const CGFloat kDefaultCompressRate = 0.5;
     }
     [self.encoder stopEncoding];
     [timer invalidate];
+    timer = nil;
 }
 
 
@@ -122,11 +124,10 @@ const CGFloat kDefaultCompressRate = 0.5;
 
 - (void)compressImage:(CGImageRef)anImage rate:(float)rate
 {
-    /* if not retina display, no need to compress. */
-//    if (!IS_RETINA) {
-//        [self saveImage:anImage];
-//        return;
-//    }
+    if (!IS_RETINA) {
+        [self saveImage:anImage];
+        return;
+    }
     CGSize imageSize = CGSizeMake (
                                    CGImageGetWidth(anImage),
                                    CGImageGetHeight(anImage)
@@ -135,7 +136,7 @@ const CGFloat kDefaultCompressRate = 0.5;
     NSImage *inputImage = [[NSImage alloc]initWithCGImage:anImage size:NSSizeFromCGSize(imageSize)];
     NSSize outputSize = NSMakeSize(imageSize.width*rate,imageSize.height*rate);
     //modify size of image
-    NSImage *outputImage  = [self scaleImage:inputImage toSize:outputSize];
+    NSImage *outputImage  = [self initImage:inputImage withSize:outputSize];
     [inputImage release];
     //
     CGContextRef bitmapContext = CGBitmapContextCreate(NULL, outputSize.width, outputSize.height, 8, 0, [[NSColorSpace genericRGBColorSpace] CGColorSpace], kCGBitmapByteOrder32Host|kCGImageAlphaPremultipliedFirst);
@@ -150,85 +151,73 @@ const CGFloat kDefaultCompressRate = 0.5;
     CGImageRelease(cgImage);
 }
 
-- (NSImage *)scaleImage:(NSImage *)image toSize:(NSSize)targetSize
-{
-    if ([image isValid])
-    {
-        NSSize imageSize = [image size];
-        float width  = imageSize.width;
-        float height = imageSize.height;
-        float targetWidth  = targetSize.width;
-        float targetHeight = targetSize.height;
-        float scaleFactor  = 0.0;
-        float scaledWidth  = targetWidth;
-        float scaledHeight = targetHeight;
+- (NSImage *)initImage:(NSImage *)image withSize:(NSSize)targetSize{
+    
+    if (![image isValid] || (!NSEqualSizes([image size], targetSize))){
         
-        NSPoint thumbnailPoint = NSZeroPoint;
+        return nil;
+    }
+    
+    NSSize imageSize = [image size];
+    float width  = imageSize.width;
+    float height = imageSize.height;
+    float targetWidth  = targetSize.width;
+    float targetHeight = targetSize.height;
+    float scaleFactor  = 0.0;
+    float scaledWidth  = targetWidth;
+    float scaledHeight = targetHeight;
+    NSPoint thumbnailPoint = NSZeroPoint;
+    float widthFactor  = targetWidth / width;
+    float heightFactor = targetHeight / height;
+            
+    if (widthFactor < heightFactor){
+    
+        scaleFactor = widthFactor;
+    }
+    else{
         
-        if (!NSEqualSizes(imageSize, targetSize))
-        {
-            float widthFactor  = targetWidth / width;
-            float heightFactor = targetHeight / height;
+        scaleFactor = heightFactor;
+    }
             
-            if (widthFactor < heightFactor)
-            {
-                scaleFactor = widthFactor;
-            }
-            else
-            {
-                scaleFactor = heightFactor;
-            }
+    scaledWidth  = width  * scaleFactor;
+    scaledHeight = height * scaleFactor;
             
-            scaledWidth  = width  * scaleFactor;
-            scaledHeight = height * scaleFactor;
-            
-            if (widthFactor < heightFactor)
-            {
-                thumbnailPoint.y = (targetHeight - scaledHeight) * 0.5;
-            }
-            
-            else if (widthFactor > heightFactor)
-            {
-                thumbnailPoint.x = (targetWidth - scaledWidth) * 0.5;
-            }
-            
-            NSImage *newImage = [[NSImage alloc] initWithSize:targetSize];
-            
-            [newImage lockFocus];
-            
-            NSRect thumbnailRect;
-            thumbnailRect.origin = thumbnailPoint;
-            thumbnailRect.size.width = scaledWidth;
-            thumbnailRect.size.height = scaledHeight;
-            
-            [image drawInRect:thumbnailRect
+    if (widthFactor < heightFactor){
+        
+        thumbnailPoint.y = (targetHeight - scaledHeight) * 0.5;
+    }
+    else if (widthFactor > heightFactor){
+        
+        thumbnailPoint.x = (targetWidth - scaledWidth) * 0.5;
+    }
+    NSImage *newImage = [[[NSImage alloc] initWithSize:targetSize]autorelease];
+    [newImage lockFocus];
+    NSRect thumbnailRect;
+    thumbnailRect.origin = thumbnailPoint;
+    thumbnailRect.size.width = scaledWidth;
+    thumbnailRect.size.height = scaledHeight;
+    [image drawInRect:thumbnailRect
                      fromRect:NSZeroRect
                     operation:NSCompositeSourceOver
                      fraction:1.0];
-            
-            [newImage unlockFocus];
-            return newImage;
-        }
-    }
-    return nil;
+    [newImage unlockFocus];
+    return newImage;
 }
 
 
 - (void)saveImage:(CGImageRef)anImage{
+    
     size_t width  = CGImageGetWidth(anImage);
     size_t height = CGImageGetHeight(anImage);
     
     CGDataProviderRef provider = CGImageGetDataProvider(anImage);
     NSData* data = (id)CGDataProviderCopyData(provider);
     [data autorelease];
-    /**
-     *  获取图片data的所有bytes的开始指针位置，size = width*height*4
-     */
+    
     const uint8_t* bytes = [data bytes];
-    
     NSData *yuvData =[self convertImageDataFormatToYUVFromRGB:(uint8_t*)bytes byWidth:width height:height];
-    
     const uint8_t *yuvBytes = [yuvData bytes];
+    
     if (!self.encoder) {
         self.encoder = [[x264Encoder alloc]init];
         [self.encoder initForX264WithWidth:(int)width height:(int)height];

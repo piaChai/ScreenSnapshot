@@ -31,8 +31,7 @@
     
     int bitrate, maxbitrate;
     int m_maxBandwidth =0;
-	if (m_maxBandwidth == 0)
-	{
+	if (m_maxBandwidth == 0){
 		m_maxBandwidth = kDefaultBandwidth;
 	}
     
@@ -66,7 +65,6 @@
     p264Param->b_intra_refresh =1;
     p264Param->b_annexb =1;
   
-
     p264Param->analyse.intra = 0;
 	p264Param->analyse.inter = 0;
 	p264Param->analyse.i_me_method = X264_ME_DIA;

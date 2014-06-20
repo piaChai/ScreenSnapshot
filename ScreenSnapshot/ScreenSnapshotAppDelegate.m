@@ -2,16 +2,13 @@
 
 #import "ScreenSnapshotAppDelegate.h"
 #import "ScreenShotManager.h"
-#import "x264Encoder.h"
+
 
 #define NORMALIZE(value) (value > 255 ? 255 : (value < 0 ? 0 : value))
 
-#define IS_RETINA ([[NSScreen mainScreen]backingScaleFactor] > 1.0)
-
-const NSInteger kCaptureMenuItemOptionStartTag = 101;
-const NSInteger kCaptureMenuItemOptionStopTag = 102;
-const NSInteger kScreenMenuItemScreenItemTag = 103;
-
+static NSInteger const kCaptureMenuItemOptionStartTag = 101;
+static NSInteger const kCaptureMenuItemOptionStopTag = 102;
+static NSInteger const kScreenMenuItemScreenItemTag = 103;
 
 
 @implementation ScreenSnapshotAppDelegate
@@ -29,7 +26,7 @@ const NSInteger kScreenMenuItemScreenItemTag = 103;
 	[super dealloc];
 }
 
-#pragma mark NSApplicationDelegate
+#pragma mark - NSApplicationDelegate
 
 
 - (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)sender 
@@ -45,6 +42,8 @@ const NSInteger kScreenMenuItemScreenItemTag = 103;
     [self initScreenMenuItem];
     
 }
+
+#pragma mark - menu item init
 
 - (void)initScreenMenuItem
 {
@@ -88,11 +87,7 @@ const NSInteger kScreenMenuItemScreenItemTag = 103;
     [captureMenu release];
 }
 
-
-
-
-#pragma mark Display routines
-
+#pragma mark menu action event
 
 - (void)selectCaptureItem:(id)sender
 {
@@ -119,15 +114,10 @@ const NSInteger kScreenMenuItemScreenItemTag = 103;
 - (void)selectScreenItem:(id)sender
 {
     NSMenuItem *menuItem = (NSMenuItem *)sender;
-    
     NSInteger screenIndex = [menuItem tag]-kScreenMenuItemScreenItemTag;
-    
     NSInteger selectedIndex = [[ScreenShotManager sharedManager] selectedScreenIndex];
-    
     [[[screenMenuItem submenu]itemAtIndex:selectedIndex]setState:NSOffState];
-    
     [[[screenMenuItem submenu]itemAtIndex:screenIndex]setState:NSOnState];
-    
     [[ScreenShotManager sharedManager] setSelectedScreenIndex:screenIndex];
 }
 

@@ -12,9 +12,7 @@
 @private
     IBOutlet NSMenuItem *captureMenuItem;
     IBOutlet NSMenuItem *screenMenuItem;
-	/* displays[] Quartz display ID's */
 	CGDirectDisplayID *displays;
-	BOOL	 DisplayRegistrationCallBackSuccessful;
 }
 
 
